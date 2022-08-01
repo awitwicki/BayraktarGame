@@ -11,7 +11,6 @@ var tank;
 var drone;
 
 var gameArea = {
-    
     start: function () {
         var cv = document.getElementById('cv');
         cv.style.visibility = "visible";
