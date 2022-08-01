@@ -31,7 +31,6 @@ var gameArea = {
             cv.height = 950;
         }
 
-        
         var ctx = cv.getContext("2d");
         var img = document.getElementById("drone");
         drawLine();
@@ -72,13 +71,11 @@ function component(width, height, color, x, y, type) {
         ctx.rotate(this.angle);
         ctx.drawImage(this.image, this.width / -2 , this.height / -2, 100, 100);
         ctx.restore();
-        
-      }
+    }
     this.newPos = function () {
         this.y += 1;
-        
     }
-    }
+}
 
 // tankArray[]
 var isGameOver = false;
@@ -86,8 +83,7 @@ var isLineCrossed = false;
 function startLevel() {
     initLevel();
 
-    if(!isGameOver)
-    {
+    if(!isGameOver) {
       setInterval(updateGameArea, 10)
       RenderLevel();
     }
@@ -110,24 +106,24 @@ function updateGameArea() {
     tank.newPos();
     checkLine();
     drawLine();
-
-  }
+}
   
-
-
 function RenderLevel() {
     // Draw all from tankArray[]
 }
+
 function checkLine() {
     if(tank.y>=cv.height/1.2){
         endGame();
     }
 }
+
 function endGame() {
     tank.y = +50;
     alert("Game Over");
     document.location.reload();
 }
+
 function drawLine() {
     var ctx = cv.getContext("2d");
     ctx.strokeStyle = 'yellow';
@@ -137,7 +133,4 @@ function drawLine() {
     ctx.lineTo(cv.width, cv.height/1.2);
     ctx.stroke();
 }
-   
-  
-
-  
+     

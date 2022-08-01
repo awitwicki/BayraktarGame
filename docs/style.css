@@ -6,7 +6,8 @@ body {
     min-height: 600pv;
     overflow: hidden;
 }
-html{height: 100%;
+html {
+    height: 100%;
     overflow: hidden;
    }
 canvas {
