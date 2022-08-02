@@ -14,6 +14,7 @@ var cooldown = false;
 var cooldownTimer = 0;
 var offset;
 var rocketLaunched = false;
+var score = 0;
 
 const droneImageUrl =  "res/Drone.png";
 const tankImageUrl = "res/Tank.png";
@@ -137,6 +138,7 @@ function updateGameArea() {
     checkTankRespawn();
     checkLine();
     updateTimer();
+    updateScore();
 }
 
 function checkLine() {
@@ -161,6 +163,12 @@ function drawLine() {
     ctx.stroke();
 }
 
+function updateScore() {
+    var ctx = cv.getContext("2d");
+    ctx.font = "30px Arial";
+    ctx.fillText("Score: "+score, 10, 50)
+}
+
 function updateTimer() {
     cooldownTimer += 10;
     if (cooldownTimer >= 3000) {
@@ -175,7 +183,7 @@ function checkRocket() {
     }
     if (rocket.x <= target.x + 5  && rocket.y <= target.y + 5 ) {
     rocketLaunched = false;
-        if(50 > target.x - tank.x && target.x - tank.x > -50 && 50 > target.y - tank.y && target.y - tank.y > -50 ){
+        if(50 > target.x - tank.x && target.x - tank.x > -50 && 50 > target.y - tank.y && target.y - tank.y > -50 && !tank.destroyed ){
             updateTankStatus();
         }
         
@@ -198,5 +206,6 @@ function checkTankRespawn() {
 function updateTankStatus() {
     tank.destroyed = true;
     tank.image.src = tankDestroyedImageUrl;
+    score += 1;
 }
      
