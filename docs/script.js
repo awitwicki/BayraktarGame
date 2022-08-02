@@ -134,7 +134,7 @@ function updateGameArea() {
     tank.newTankPos();
     rocket.update();
     checkRocket();
-    checkTank();
+    checkTankRespawn();
     checkLine();
     updateTimer();
 }
@@ -176,8 +176,9 @@ function checkRocket() {
     if (rocket.x <= target.x + 5  && rocket.y <= target.y + 5 ) {
     rocketLaunched = false;
         if(50 > target.x - tank.x && target.x - tank.x > -50 && 50 > target.y - tank.y && target.y - tank.y > -50 ){
-            tank.destroyed = true;
+            updateTankStatus();
         }
+        
     rocket.x = -100;
     rocket.y = -100;
     target.x = -100;
@@ -185,15 +186,17 @@ function checkRocket() {
     }
 }
 
-function checkTank() {
-    if (tank.destroyed) {
-        tank.image.src = tankDestroyedImageUrl;
-    }
+function checkTankRespawn() {
     if (tank.y > cv.height + 100) {
-        tank.y = -100;
-        tank.x = Math.random() * (cv.width - 50);
-        tank.destroyed = false;
-        tank.image.src = tankImageUrl;
+    tank.y = -100;
+    tank.x = Math.random() * (cv.width - 50);
+    tank.destroyed = false;
+    tank.image.src = tankImageUrl;
     }
+}
+
+function updateTankStatus() {
+    tank.destroyed = true;
+    tank.image.src = tankDestroyedImageUrl;
 }
      
