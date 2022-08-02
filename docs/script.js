@@ -187,7 +187,7 @@ function checkRocket() {
 
 function checkTank() {
   if (tank.destroyed) {
-    tank.image.src = "res/Tank_destroyed.png";
+    tank.image.src = "res/Tank_Destroyed.png";
   }
   if (tank.y > cv.height + 100) {
     tank.y = -100;
