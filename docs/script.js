@@ -49,8 +49,6 @@ function component(width, height, color, x, y, type) {
     this.gamearea = gameArea;
     this.width = width;
     this.height = height;
-    this.destinationX = 0;
-    this.destinationy = 0;
     this.x = x;
     this.y = y;
     this.speedX = 0;
@@ -134,10 +132,6 @@ function updateGameArea() {
     checkTank();
     checkLine();
     updateTimer();
-}
-  
-function RenderLevel() {
-    // Draw all from tankArray[]
 }
 
 function checkLine() {
