@@ -15,6 +15,12 @@ var cooldownTimer = 0;
 var offset;
 var rocketLaunched = false;
 
+const droneImageUrl =  "res/Drone.png";
+const tankImageUrl = "res/Tank.png";
+const tankDestroyedImageUrl = "res/Tank_Destroyed.png";
+const targetImageUrl = "res/Target.png";
+const rocketImageUrl = "res/Rocket.png";
+
 var gameArea = {
     start: function () {
         var cv = document.getElementById('cv');
@@ -87,7 +93,6 @@ function startLevel() {
 
     if(!isGameOver) {
       setInterval(updateGameArea, 10)
-      RenderLevel();
     }
 }
 
@@ -113,10 +118,10 @@ function initLevel() {
         }
     }
     
-    tank = new component(100, 100, "res/tank.png", Math.random() * (cv.width - 50) , -100, "tank");
-    drone = new component(100, 100, "res/drone.png", cv.width/2, cv.height/1.1, "drone" );
-    rocket = new component (25, 25, "res/rocket.png", -100, -100, "rocket");
-    target = new component (100, 100, "res/target.png", -100, -100, "target");
+    tank = new component(100, 100, tankImageUrl, Math.random() * (cv.width - 50) , -100, "tank");
+    drone = new component(100, 100, droneImageUrl, cv.width/2, cv.height/1.1, "drone" );
+    rocket = new component (25, 25, rocketImageUrl, -100, -100, "rocket");
+    target = new component (100, 100, targetImageUrl, -100, -100, "target");
 }
 
 // Update game tick
@@ -182,13 +187,13 @@ function checkRocket() {
 
 function checkTank() {
     if (tank.destroyed) {
-        tank.image.src = "res/tank_destroyed.png";
+        tank.image.src = tankDestroyedImageUrl;
     }
     if (tank.y > cv.height + 100) {
         tank.y = -100;
         tank.x = Math.random() * (cv.width - 50);
         tank.destroyed = false;
-        tank.image.src = "res/tank.png"
+        tank.image.src = tankImageUrl;
     }
 }
      
