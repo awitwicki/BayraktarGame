@@ -77,11 +77,7 @@ function component(width, height, color, x, y, type) {
     ctx.restore();
   }
 
-  this.newTankPos = function () {
-    this.y += 1;
-  }
-
-  this.newRocketPos = function () {
+  this.newPos = function () {
     this.x += this.speedX;
     this.y += this.speedY;
   }
@@ -129,7 +125,7 @@ function updateGameArea() {
   for (var i = 0; i < tankArray.length; i++) {
     tank = tankArray[i];
     tank.update();
-    tank.newTankPos();
+    tank.newPos();
     checkTankRespawn();
 
     // Check for tank crossed alive
@@ -161,7 +157,7 @@ function endGame() {
 function drawScore() {
   var ctx = cv.getContext("2d");
   ctx.font = "30px Arial";
-  ctx.fillText("На рахунку: " + score, 10, 50)
+  ctx.fillText("На рахунку: " + score, 10, 40)
 }
 
 function updateTimer() {
@@ -174,7 +170,7 @@ function updateTimer() {
 
 function checkRocket() {
   if (rocket.launched) {
-    rocket.newRocketPos();
+    rocket.newPos();
   }
 
   if (rocket.x <= target.x + 5 && rocket.y <= target.y + 5) {
@@ -213,5 +209,6 @@ function updateTankStatus(i) {
 
 function spawnTank() {
   var _tank = new component(100, 100, tankImageUrl, Math.random() * (cv.width - 50), -100, "tank");
+  _tank.speedY = 1
   tankArray.push(_tank);
 }
