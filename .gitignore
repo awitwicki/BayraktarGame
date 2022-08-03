@@ -1,3 +1,9 @@
+# Dotnet
 bin/
 obj/
+
+# Visual studio
 .vs/
+
+# Docker-compose
+.env
