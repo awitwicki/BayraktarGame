@@ -149,6 +149,33 @@ function updateGameArea() {
 }
 
 function endGame() {
+  var url = new URL(location.href);
+  var gameId = url.searchParams.get("gameid");
+
+  // Sumbit score to bot via mqtt if gameid is provided
+  if (gameId != null) {
+    // Create a mqtt client instance
+    var client = new Paho.MQTT.Client('broker.hivemq.com', 8000, uuidv4());
+
+    // Connect the client
+    client.connect({onSuccess:onConnect});
+
+    // Called when the client connects
+    function onConnect() {
+        // Once a connection has been made, make a subscription and send a message.
+        console.log("onConnect");
+        var message = new Paho.MQTT.Message(gameId + '|' + score);
+        message.destinationName = "/h3twergwergome/temperature";
+        client.send(message);
+    }
+
+    function uuidv4() {
+        return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+            (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+        );
+    }
+  }
+
   tank.y = +50;
   alert("Game Over");
   document.location.reload();
@@ -209,6 +236,6 @@ function updateTankStatus(i) {
 
 function spawnTank() {
   var _tank = new component(100, 100, tankImageUrl, Math.random() * (cv.width - 50), -100, "tank");
-  _tank.speedY = 1
+  _tank.speedY = 1;
   tankArray.push(_tank);
 }
