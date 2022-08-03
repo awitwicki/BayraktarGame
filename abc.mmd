@@ -1,0 +1,10 @@
+sequenceDiagram
+
+User->>Bot: Start playing game
+Bot->>Html5 game: Redirect
+loop Playing
+    Html5 game->>Html5 game: Play until end
+end
+Html5 game->>MQTT broker: Level points
+MQTT broker->>Bot: Level points
+Bot->>User: Game result
