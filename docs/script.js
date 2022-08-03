@@ -14,6 +14,9 @@ function startGame() {
   var offset;
   var rocketLaunched = false;
   var score = 0;
+  var tankArray = [];
+  var rockets = [];
+  var targets = [];
   
   const droneImageUrl =  "res/Drone.png";
   const tankImageUrl = "res/Tank.png";
@@ -92,9 +95,11 @@ function startGame() {
   
   function initLevel() {
     // Randon number (0..this.canvas.width)
-  
+    spawnTank();
+    setInterval(spawnTank, 5000)
     // Create new tank object with speed vector and put to tankArray[]
-    tankArray = [];
+
+    
     offset = (window.innerWidth - cv.width) / 2;
   
     cv.addEventListener('click', (evt) => { });
@@ -104,15 +109,15 @@ function startGame() {
         target.y = evt.clientY;
         rocket.x = drone.x;
         rocket.y = drone.y;
-        rocket.speedX = (target.x - drone.x) / 50;
-        rocket.speedY = (target.y - drone.y) / 50;
+        rocket.speedX = (target.x - drone.x) / -((target.y - drone.y)/4) ;
+        rocket.speedY = (target.y - drone.y) / -((target.y - drone.y)/4) ;
         cooldown = true;
         rocketLaunched = true;
         rocket.angle = Math.atan2(target.y - rocket.y, target.x - rocket.x);
       }
     }
   
-    tank = new component(100, 100, tankImageUrl, Math.random() * (cv.width - 50) , -100, "tank");
+    //tank = new component(100, 100, tankImageUrl, Math.random() * (cv.width - 50) , -100, "tank");
     drone = new component(100, 100, droneImageUrl, cv.width/2, cv.height/1.1, "drone" );
     rocket = new component (25, 25, rocketImageUrl, -100, -100, "rocket");
     target = new component (100, 100, targetImageUrl, -100, -100, "target");
@@ -122,16 +127,20 @@ function startGame() {
   function updateGameArea() {
     gameArea.clear();
     drawLine();
-    tank.update();
+    updateTimer();
+    updateScore()
     drone.update();
     target.update();
-    tank.newTankPos();
     rocket.update();
     checkRocket();
-    checkTankRespawn();
-    checkLine();
-    updateTimer();
-    updateScore();
+    for (var i = 0; i < tankArray.length; i++) {
+      tank = tankArray[i];
+      tank.update();
+      tank.newTankPos();
+      checkTankRespawn();
+      checkLine();
+    }
+
   }
   
   function checkLine() {
@@ -164,7 +173,7 @@ function startGame() {
   
   function updateTimer() {
     cooldownTimer += 10;
-    if (cooldownTimer >= 3000) {
+    if (cooldownTimer >= 1000) {
       cooldown = false;
       cooldownTimer = 0;
     }
@@ -175,29 +184,39 @@ function startGame() {
       rocket.newRocketPos();
     }
     if (rocket.x <= target.x + 5 && rocket.y <= target.y + 5) {
-      rocketLaunched = false;
-      if (50 > target.x - tank.x && target.x - tank.x > -50 && 50 > target.y - tank.y && target.y - tank.y > -50 && !tank.destroyed) {
-        updateTankStatus();
+      rocketLaunched = false;Array[i]
+      for (var i = 0; i < tankArray.length; i++) {
+        if (50 > target.x - tankArray[i].x && target.x - tankArray[i].x > -50 && 50 > target.y - tankArray[i].y && target.y - tankArray[i].y > -50 && !tankArray[i].destroyed) {
+          updateTankStatus(i);
+        }
       }
+      
       rocket.x = -100;
       rocket.y = -100;
       target.x = -100;
       target.y = -100;
+
+
     }
   }
   
   function checkTankRespawn() {
     if (tank.y > cv.height + 100) {
-    tank.y = -100;
-    tank.x = Math.random() * (cv.width - 50);
-    tank.destroyed = false;
-    tank.image.src = tankImageUrl;
-      }
+    //tank.y = -100;
+    //tank.x = Math.random() * (cv.width - 50);
+    //tank.destroyed = false;
+    //tank.image.src = tankImageUrl;
+      tankArray.pop;
+    }
   }
   
-  function updateTankStatus() {
-    tank.destroyed = true;
-    tank.image.src = tankDestroyedImageUrl;
+  function updateTankStatus(i) {
+    tankArray[i].destroyed = true;
+    tankArray[i].image.src = tankDestroyedImageUrl;
     score += 1;
   }
   
+  function spawnTank() {
+    var _tank = new component(100, 100, tankImageUrl, Math.random() * (cv.width - 50) , -100, "tank");
+    tankArray.push(_tank);
+  }
