@@ -158,7 +158,10 @@ function endGame() {
     var client = new Paho.MQTT.Client('broker.hivemq.com', 8000, uuidv4());
 
     // Connect the client
-    client.connect({onSuccess:onConnect});
+    client.connect({
+      useSSL: true,
+      onSuccess:onConnect
+    });
 
     // Called when the client connects
     function onConnect() {
