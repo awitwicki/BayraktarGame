@@ -31,10 +31,10 @@ var gameArea = {
   start: function () {
     var cv = document.getElementById('cv');
     cv.style.visibility = "visible";
+
     if (window.innerWidth < 700) {
       cv.width = window.innerWidth;
-    }
-    else {
+    } else {
       cv.width = 700;
     }
 
@@ -42,8 +42,7 @@ var gameArea = {
 
     if (window.innerHeight < 950) {
       cv.height = window.innerHeight;
-    }
-    else {
+    } else {
       cv.height = 950;
     }
   },
@@ -88,7 +87,6 @@ function component(width, height, color, x, y, type) {
   }
 }
 
-
 function startLevel() {
   initLevel();
 
@@ -120,16 +118,25 @@ function initLevel() {
     }
   }
 
-  drone = new component(100, 100, droneImageUrl, cv.width / 2, cv.height / 1.1, "drone");
+  drone = new component(200, 200, droneImageUrl, cv.width / 2, cv.height / 1.2, "drone");
 }
 
 // Update game tick
 function updateGameArea() {
   gameArea.clear();
-  drawLine();
   updateTimer();
-  updateScore()
-  drone.update();
+
+  for (var i = 0; i < tankArray.length; i++) {
+    tank = tankArray[i];
+    tank.update();
+    tank.newTankPos();
+    checkTankRespawn();
+
+    // Check for tank crossed alive
+    if (tank.y >= cv.height && tank.destroyed == false) {
+      endGame();
+    }
+  }
 
   if (targets.length > 0) {
     for (i = 0; i < targets.length; i++) {
@@ -141,19 +148,8 @@ function updateGameArea() {
     }
   }
 
-  for (var i = 0; i < tankArray.length; i++) {
-    tank = tankArray[i];
-    tank.update();
-    tank.newTankPos();
-    checkTankRespawn();
-    checkLine();
-  }
-}
-
-function checkLine() {
-  if (tank.y >= cv.height / 1.2 && tank.destroyed == false) {
-    endGame();
-  }
+  drawScore()
+  drone.update();
 }
 
 function endGame() {
@@ -162,20 +158,10 @@ function endGame() {
   document.location.reload();
 }
 
-function drawLine() {
-  var ctx = cv.getContext("2d");
-  ctx.strokeStyle = 'yellow';
-  ctx.lineWidth = 5;
-  ctx.beginPath();
-  ctx.moveTo(0, cv.height / 1.2);
-  ctx.lineTo(cv.width, cv.height / 1.2);
-  ctx.stroke();
-}
-
-function updateScore() {
+function drawScore() {
   var ctx = cv.getContext("2d");
   ctx.font = "30px Arial";
-  ctx.fillText("Score: " + score, 10, 50)
+  ctx.fillText("На рахунку: " + score, 10, 50)
 }
 
 function updateTimer() {
