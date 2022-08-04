@@ -17,6 +17,9 @@ var score = 0;
 var tankArray = [];
 var rockets = [];
 var targets = [];
+var difficulty = 1;
+var nextDifficulty = 5;
+var respawnTimer = 0;
 
 var isGameOver = false;
 var isLineCrossed = false;
@@ -93,7 +96,7 @@ function startLevel() {
 
 function initLevel() {
   spawnTank();
-  setInterval(spawnTank, 5000)
+  //setInterval(spawnTank, 5000/difficulty)
 
   offset = (window.innerWidth - cv.width) / 2;
 
@@ -121,6 +124,7 @@ function initLevel() {
 function updateGameArea() {
   gameArea.clear();
   updateTimer();
+  checkDifficulty();
 
   for (var i = 0; i < tankArray.length; i++) {
     tank = tankArray[i];
@@ -192,6 +196,7 @@ function drawScore() {
 
 function updateTimer() {
   cooldownTimer += 10;
+  respawnTimer += 10;
   if (cooldownTimer >= 1000) {
     cooldown = false;
     cooldownTimer = 0;
@@ -203,7 +208,7 @@ function checkRocket() {
     rocket.newPos();
   }
 
-  if (rocket.x <= target.x + 5 && rocket.y <= target.y + 5) {
+  if (rocket.x <= target.x + 5 && rocket.y <= target.y + 5 && rocket.x >= target.x - 5 && rocket.y >= target.y - 5) {
     rocket.launched = false;
     for (var i = 0; i < tankArray.length; i++) {
       if (
@@ -229,6 +234,10 @@ function checkTankRespawn() {
   if (tank.y > cv.height + 100) {
     tankArray.pop;
   }
+  if (respawnTimer >= 1000+(30000*(1/(10+difficulty))) + (Math.random()*1000 - 500)) {
+    respawnTimer = 0;
+    spawnTank();
+  }
 }
 
 function updateTankStatus(i) {
@@ -241,4 +250,11 @@ function spawnTank() {
   var _tank = new component(100, 100, tankImageUrl, Math.random() * (cv.width - 50), -100, "tank");
   _tank.speedY = 1;
   tankArray.push(_tank);
+}
+
+function checkDifficulty() {
+  if (score >= nextDifficulty) {
+    difficulty += 1;
+    nextDifficulty += 3;
+  }
 }
