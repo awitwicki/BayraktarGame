@@ -87,10 +87,7 @@ function component(width, height, color, x, y, type) {
 
 function startLevel() {
   initLevel();
-
-  if (!isGameOver) {
-    interval = setInterval(updateGameArea, 10);
-  }
+  interval = setInterval(updateGameArea, 10);
 }
 
 function initLevel() {
@@ -133,7 +130,7 @@ function updateGameArea() {
 
     // Check for tank crossed alive
     if (tank.y >= cv.height && tank.destroyed == false) {
-      endGame();
+      isGameOver = true;
     }
   }
 
@@ -149,6 +146,9 @@ function updateGameArea() {
 
   drawScore()
   drone.update();
+  if (isGameOver) {
+    endGame();
+  }
 }
 
 function endGame() {
@@ -183,14 +183,20 @@ function endGame() {
   }
 
   tank.y = +50;
-  alert("Гра закінчена. Рахунок: "+score);
-  document.location.reload();
+  gameArea.clear();
+  clearInterval(interval);
+  document.getElementById("restart").style.visibility = "visible";
+  var ctx = cv.getContext("2d");
+  ctx.font = "30px Arial";
+  ctx.textAlign = "center";
+  ctx.fillText("Ви програли!", cv.width/2, cv.height/2 - 140)
+  ctx.fillText("На рахунку: " + score, cv.width/2, cv.height/2-100)
 }
 
 function drawScore() {
   var ctx = cv.getContext("2d");
   ctx.font = "30px Arial";
-  ctx.fillText("На рахунку: " + score, 10, 40)
+  ctx.fillText("На рахунку: " + score, 10, 40);
 }
 
 function updateTimer() {
@@ -249,4 +255,8 @@ function spawnTank() {
   var _tank = new component(100, 100, tankImageUrl, Math.random() * (cv.width - 50), -100, "tank");
   _tank.speedY = 1;
   tankArray.push(_tank);
+}
+
+function restart() {
+  document.location.reload();
 }
