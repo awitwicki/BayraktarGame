@@ -17,9 +17,8 @@ var score = 0;
 var tankArray = [];
 var rockets = [];
 var targets = [];
-var difficulty = 1;
-var nextDifficulty = 5;
 var respawnTimer = 0;
+var interval;
 
 var isGameOver = false;
 var isLineCrossed = false;
@@ -90,7 +89,7 @@ function startLevel() {
   initLevel();
 
   if (!isGameOver) {
-    setInterval(updateGameArea, 10)
+    interval = setInterval(updateGameArea, 10);
   }
 }
 
@@ -124,7 +123,7 @@ function initLevel() {
 function updateGameArea() {
   gameArea.clear();
   updateTimer();
-  checkDifficulty();
+
 
   for (var i = 0; i < tankArray.length; i++) {
     tank = tankArray[i];
@@ -184,7 +183,7 @@ function endGame() {
   }
 
   tank.y = +50;
-  alert("Game Over");
+  alert("Гра закінчена. Рахунок: "+score);
   document.location.reload();
 }
 
@@ -234,7 +233,7 @@ function checkTankRespawn() {
   if (tank.y > cv.height + 100) {
     tankArray.pop;
   }
-  if (respawnTimer >= 1000+(30000*(1/(10+difficulty))) + (Math.random()*1000 - 500)) {
+  if (respawnTimer >= 1000+(30000*(1/(10+score/3))) + (Math.random()*1000 - 500)) {
     respawnTimer = 0;
     spawnTank();
   }
@@ -250,11 +249,4 @@ function spawnTank() {
   var _tank = new component(100, 100, tankImageUrl, Math.random() * (cv.width - 50), -100, "tank");
   _tank.speedY = 1;
   tankArray.push(_tank);
-}
-
-function checkDifficulty() {
-  if (score >= nextDifficulty) {
-    difficulty += 1;
-    nextDifficulty += 3;
-  }
 }
