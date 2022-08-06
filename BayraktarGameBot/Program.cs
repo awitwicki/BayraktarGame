@@ -54,6 +54,7 @@ using Telegram.Bot.Types.ReplyMarkups;
         // Check the score
         if (Games.GamesDict.TryRemove(gameId, out GameEntity gameEntity))
         {
+            InfluxDBLiteClient.Query($"bots,botname=baraktar_bot,user_id={gameEntity.UserId} user_sent_score={score}");
             BotClientBuilder.BotClient.SetGameScoreAsync(gameEntity.UserId, score, gameEntity.InlineMessageId, true).Wait();
         }
 
