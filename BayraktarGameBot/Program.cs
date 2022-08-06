@@ -1,24 +1,87 @@
 ﻿using BayraktarGameBot;
+using MQTTnet;
+using MQTTnet.Client;
+using System.Security.Authentication;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Extensions.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using uPLibrary.Networking.M2Mqtt;
-using uPLibrary.Networking.M2Mqtt.Messages;
+using Telegram.Bot.Types.ReplyMarkups;
 
+
+// MQTT
+{
+    string topicName = "h3twergwergomemperature";
+
+    var mqttFactory = new MqttFactory();
+
+    var mqttClient = mqttFactory.CreateMqttClient();
+
+    var mqttClientOptions = new MqttClientOptionsBuilder()
+        .WithWebSocketServer("test.mosquitto.org:8081")
+        .WithTls(
+            o =>
+            {
+            // The used public broker sometimes has invalid certificates. This sample accepts all
+            // certificates. This should not be used in live environments.
+            o.CertificateValidationHandler = _ => true;
+
+            // The default value is determined by the OS. Set manually to force version.
+            o.SslProtocol = SslProtocols.Tls12;
+            })
+        .Build();
+
+    // Setup message handling before connecting so that queued messages
+    // are also handled properly. When there is no event handler attached all
+    // received messages get lost.
+    mqttClient.ApplicationMessageReceivedAsync += e =>
+    {
+        Console.WriteLine("Received application message.");
+        var byteArray = e.ApplicationMessage.Payload;
+        string dataStr = System.Text.Encoding.UTF8.GetString(byteArray);
+
+        // DataStr is structured string
+        // GameId|Score|
+        // BAaAYE|   36|
+
+        Console.WriteLine(dataStr);
+
+        string gameId = dataStr.Split("|").First();
+
+        int score = int.Parse(dataStr.Split("|").Skip(1).First());
+
+        // Check the score
+        if (Games.GamesDict.TryRemove(gameId, out GameEntity gameEntity))
+        {
+            BotClientBuilder.BotClient.SetGameScoreAsync(gameEntity.UserId, score, gameEntity.InlineMessageId, true).Wait();
+        }
+
+        return Task.CompletedTask;
+    };
+
+    await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
+
+    var mqttSubscribeOptions = mqttFactory.CreateSubscribeOptionsBuilder()
+        .WithTopicFilter(f => { f.WithTopic(topicName); })
+        .Build();
+
+    await mqttClient.SubscribeAsync(mqttSubscribeOptions, CancellationToken.None);
+}
+
+// Bot logic
 string botToken = Environment.GetEnvironmentVariable("BARAKTARBOT_TELEGRAM_TOKEN")!;
 
 var bot = new TelegramBotClient(botToken);
 
 bot.StartReceiving(
-        HandleUpdateAsync,
-        HandleErrorAsync,
-        new ReceiverOptions
-        {
-            AllowedUpdates = { },
-            ThrowPendingUpdates = true
-        });
+    HandleUpdateAsync,
+    HandleErrorAsync,
+    new ReceiverOptions
+    {
+        AllowedUpdates = { },
+        ThrowPendingUpdates = true
+    });
 
 var me = bot.GetMeAsync().GetAwaiter().GetResult();
 
@@ -26,45 +89,6 @@ Console.WriteLine($"Start listening bot for @{me.Username}");
 
 BotClientBuilder.BotClient = bot;
 
-// MQTT logic
-{
-    // Create client instance 
-    MqttClient client = new MqttClient("broker.hivemq.com");
-
-    // Register to message received 
-    client.MqttMsgPublishReceived += _client_MqttMsgPublishReceived;
-
-    string clientId = Guid.NewGuid().ToString();
-    client.Connect(clientId);
-
-    // Subscribe to the topic "/h3twergwergome/temperature" with QoS 2 
-    client.Subscribe(new string[] { "/h3twergwergome/temperature" }, new byte[] { MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE });
-}
-
-static void _client_MqttMsgPublishReceived(object sender, MqttMsgPublishEventArgs e)
-{
-    var byteArray = e.Message;
-    string dataStr = System.Text.Encoding.UTF8.GetString(byteArray);
-
-    // DataStr is structured string
-    // GameId|Score|
-    // BAaAYE|   36|
-
-    Console.WriteLine(dataStr);
-
-    string gameId = dataStr.Split("|").First();
-
-    int score = int.Parse(dataStr.Split("|").Skip(1).First());
-
-    // Check the score
-
-    if (Games.GamesDict.TryRemove(gameId, out GameEntity gameEntity))
-    {
-        BotClientBuilder.BotClient.SetGameScoreAsync(gameEntity.UserId, score, gameEntity.InlineMessageId, true).Wait();
-    }
-}
-
-// Bot logic
 async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
 {
     try
@@ -92,12 +116,22 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
             Games.GamesDict.TryAdd(gameEntity.Guid, gameEntity);
 
             await botClient.AnswerCallbackQueryAsync(update.CallbackQuery.Id, url: $"https://awitwicki.github.io/BayraktarGame/?gameid={gameEntity.Guid}");
-            //await botClient.AnswerCallbackQueryAsync(update.CallbackQuery.Id, url: $"https://127.0.0.1:5500/docs/?gameid={gameEntity.Guid}");
         }
 
         if (update.Message?.Text == "/start")
         {
             
+            var keyboardMarkup = new InlineKeyboardMarkup(new InlineKeyboardButton[] {
+                        InlineKeyboardButton.WithUrl("Обрати чат для гри", "t.me/pizdiuk_bot?game=Bayraktar"),
+                    });
+
+            string responseText = $"Це бот для гри в байрактар";
+
+            Message helloMessage = await botClient.SendTextMessageAsync(
+                    chatId: update.Message.Chat.Id,
+                    replyToMessageId: update.Message.MessageId,
+                    text: responseText,
+                    replyMarkup: keyboardMarkup);
         }
     }
     catch (Exception exception)
@@ -120,3 +154,6 @@ Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, Cancell
 
     return Task.CompletedTask;
 }
+
+// Wait for ethernity
+await Task.Delay(-1);
