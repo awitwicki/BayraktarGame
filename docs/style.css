@@ -17,7 +17,7 @@ canvas {
     top: 50%;
     -ms-transform: translateY(-50%);
     transform: translateY(-50%);
-    background-color: #88f4dc;
+    background-color: darkolivegreen;
     margin: auto;
     display: block;
 }
@@ -45,6 +45,20 @@ canvas {
 }
 
 .btn {
+    position: absolute;
+    top: 90%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
+    background-color: rgb(1 64 1 / 67%);
+    font-size: 50px;
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 5px;
+}
+
+.btn2 {
     position: absolute;
     top: 90%;
     left: 50%;

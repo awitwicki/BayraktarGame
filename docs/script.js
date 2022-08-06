@@ -17,6 +17,8 @@ var score = 0;
 var tankArray = [];
 var rockets = [];
 var targets = [];
+var respawnTimer = 0;
+var interval;
 
 var isGameOver = false;
 var isLineCrossed = false;
@@ -85,15 +87,12 @@ function component(width, height, color, x, y, type) {
 
 function startLevel() {
   initLevel();
-
-  if (!isGameOver) {
-    setInterval(updateGameArea, 10)
-  }
+  interval = setInterval(updateGameArea, 10);
 }
 
 function initLevel() {
   spawnTank();
-  setInterval(spawnTank, 5000)
+  //setInterval(spawnTank, 5000/difficulty)
 
   offset = (window.innerWidth - cv.width) / 2;
 
@@ -122,6 +121,7 @@ function updateGameArea() {
   gameArea.clear();
   updateTimer();
 
+
   for (var i = 0; i < tankArray.length; i++) {
     tank = tankArray[i];
     tank.update();
@@ -130,7 +130,7 @@ function updateGameArea() {
 
     // Check for tank crossed alive
     if (tank.y >= cv.height && tank.destroyed == false) {
-      endGame();
+      isGameOver = true;
     }
   }
 
@@ -146,6 +146,9 @@ function updateGameArea() {
 
   drawScore()
   drone.update();
+  if (isGameOver) {
+    endGame();
+  }
 }
 
 function endGame() {
@@ -180,18 +183,25 @@ function endGame() {
   }
 
   tank.y = +50;
-  alert("Game Over");
-  document.location.reload();
+  gameArea.clear();
+  clearInterval(interval);
+  document.getElementById("restart").style.visibility = "visible";
+  var ctx = cv.getContext("2d");
+  ctx.font = "30px Arial";
+  ctx.textAlign = "center";
+  ctx.fillText("Ви програли!", cv.width/2, cv.height/2 - 140)
+  ctx.fillText("На рахунку: " + score, cv.width/2, cv.height/2-100)
 }
 
 function drawScore() {
   var ctx = cv.getContext("2d");
   ctx.font = "30px Arial";
-  ctx.fillText("На рахунку: " + score, 10, 40)
+  ctx.fillText("На рахунку: " + score, 10, 40);
 }
 
 function updateTimer() {
   cooldownTimer += 10;
+  respawnTimer += 10;
   if (cooldownTimer >= 1000) {
     cooldown = false;
     cooldownTimer = 0;
@@ -203,7 +213,7 @@ function checkRocket() {
     rocket.newPos();
   }
 
-  if (rocket.x <= target.x + 5 && rocket.y <= target.y + 5) {
+  if (rocket.x <= target.x + 5 && rocket.y <= target.y + 5 && rocket.x >= target.x - 5 && rocket.y >= target.y - 5) {
     rocket.launched = false;
     for (var i = 0; i < tankArray.length; i++) {
       if (
@@ -229,6 +239,10 @@ function checkTankRespawn() {
   if (tank.y > cv.height + 100) {
     tankArray.pop;
   }
+  if (respawnTimer >= 1000+(30000*(1/(10+score/3))) + (Math.random()*1000 - 500)) {
+    respawnTimer = 0;
+    spawnTank();
+  }
 }
 
 function updateTankStatus(i) {
@@ -241,4 +255,8 @@ function spawnTank() {
   var _tank = new component(100, 100, tankImageUrl, Math.random() * (cv.width - 50), -100, "tank");
   _tank.speedY = 1;
   tankArray.push(_tank);
+}
+
+function restart() {
+  document.location.reload();
 }
