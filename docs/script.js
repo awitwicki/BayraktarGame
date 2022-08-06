@@ -158,7 +158,7 @@ function endGame() {
   // Sumbit score to bot via mqtt if gameid is provided
   if (gameId != null) {
     // Create a mqtt client instance
-    var client = new Paho.MQTT.Client('broker.hivemq.com', 8000, uuidv4());
+    var client = new Paho.MQTT.Client('test.mosquitto.org', 8081, uuidv4());
 
     // Connect the client
     client.connect({
@@ -171,8 +171,9 @@ function endGame() {
         // Once a connection has been made, make a subscription and send a message.
         console.log("onConnect");
         var message = new Paho.MQTT.Message(gameId + '|' + score);
-        message.destinationName = "/h3twergwergome/temperature";
+        message.destinationName = "h3twergwergomemperature";
         client.send(message);
+        console.log("Sent");
     }
 
     function uuidv4() {
