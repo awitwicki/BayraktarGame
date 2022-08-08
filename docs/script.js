@@ -92,9 +92,13 @@ function startLevel() {
 
 function initLevel() {
   spawnTank();
-  //setInterval(spawnTank, 5000/difficulty)
 
   offset = (window.innerWidth - cv.width) / 2;
+  let barOffsetRight = offset + 10 + "px";
+
+  let fuel = document.getElementById("fuel");
+  fuel.style.visibility = "visible";
+  fuel.style.right = barOffsetRight;
 
   cv.addEventListener('click', (evt) => { });
   cv.onclick = (evt) => {
@@ -120,7 +124,7 @@ function initLevel() {
 function updateGameArea() {
   gameArea.clear();
   updateTimer();
-
+  updateFuel();
 
   for (var i = 0; i < tankArray.length; i++) {
     tank = tankArray[i];
@@ -129,9 +133,9 @@ function updateGameArea() {
     checkTankRespawn();
 
     // Check for tank crossed alive
-    if (tank.y >= cv.height && tank.destroyed == false) {
-      isGameOver = true;
-    }
+    // if (tank.y >= cv.height && tank.destroyed == false) {
+    //   isGameOver = true;
+    // }
   }
 
   if (targets.length > 0) {
@@ -183,10 +187,12 @@ function endGame() {
     }
   }
 
-  tank.y = +50;
-  gameArea.clear();
+  //tank.y = +50;
+  
   clearInterval(interval);
+  gameArea.clear();
   document.getElementById("restart").style.visibility = "visible";
+  document.getElementById("fuel").style.visibility = "hidden";
   var ctx = cv.getContext("2d");
   ctx.font = "30px Arial";
   ctx.textAlign = "center";
@@ -240,7 +246,7 @@ function checkTankRespawn() {
   if (tank.y > cv.height + 100) {
     tankArray.pop;
   }
-  if (respawnTimer >= 1000+(30000*(1/(10+score/3))) + (Math.random()*1000 - 500)) {
+  if (respawnTimer >= (30000*(1/(10+score/3))) + (Math.random()*1000 - 500)) {
     respawnTimer = 0;
     spawnTank();
   }
@@ -250,6 +256,7 @@ function updateTankStatus(i) {
   tankArray[i].destroyed = true;
   tankArray[i].image.src = tankDestroyedImageUrl;
   score += 1;
+  document.getElementById("fuel").value += 100;
 }
 
 function spawnTank() {
@@ -260,4 +267,12 @@ function spawnTank() {
 
 function restart() {
   document.location.reload();
+}
+
+function updateFuel() {
+  let fuel = document.getElementById("fuel");
+  fuel.value -= 0.5 + 0.01 * (score+1);
+  if(fuel.value <= 0) {
+    isGameOver = true;
+  }
 }
