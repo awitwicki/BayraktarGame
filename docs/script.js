@@ -246,7 +246,8 @@ function checkTankRespawn() {
   if (tank.y > cv.height + 100) {
     tankArray.pop;
   }
-  if (respawnTimer >= (30000*(1/(10+score/3))) + (Math.random()*1000 - 500)) {
+
+  if (respawnTimer >= (30000 * (1 / (10 + score / 3))) + (Math.random() * 250)) {
     respawnTimer = 0;
     spawnTank();
   }
@@ -272,6 +273,7 @@ function restart() {
 function updateFuel() {
   let fuel = document.getElementById("fuel");
   fuel.value -= 0.5 + 0.01 * (score+1);
+
   if(fuel.value <= 0) {
     isGameOver = true;
   }
