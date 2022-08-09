@@ -19,6 +19,8 @@ var rockets = [];
 var targets = [];
 var respawnTimer = 0;
 var interval;
+var fuel;
+var maxFuel;
 
 var isGameOver = false;
 var isLineCrossed = false;
@@ -96,9 +98,11 @@ function initLevel() {
   offset = (window.innerWidth - cv.width) / 2;
   let barOffsetRight = offset + 10 + "px";
 
-  let fuel = document.getElementById("fuel");
-  fuel.style.visibility = "visible";
-  fuel.style.right = barOffsetRight;
+  // let fuel = document.getElementById("fuel");
+  // fuel.style.visibility = "visible";
+  // fuel.style.right = barOffsetRight;
+  fuel = cv.width - 10;
+  maxFuel = cv.width - 10;
 
   cv.addEventListener('click', (evt) => { });
   cv.onclick = (evt) => {
@@ -148,7 +152,8 @@ function updateGameArea() {
     }
   }
 
-  drawScore()
+  drawScore();
+  drawfuel();
   drone.update();
   if (isGameOver) {
     endGame();
@@ -192,7 +197,6 @@ function endGame() {
   clearInterval(interval);
   gameArea.clear();
   document.getElementById("restart").style.visibility = "visible";
-  document.getElementById("fuel").style.visibility = "hidden";
   var ctx = cv.getContext("2d");
   ctx.font = "30px Arial";
   ctx.textAlign = "center";
@@ -202,8 +206,9 @@ function endGame() {
 
 function drawScore() {
   var ctx = cv.getContext("2d");
+  ctx.fillStyle = "black";
   ctx.font = "30px Arial";
-  ctx.fillText("На рахунку: " + score, 10, 40);
+  ctx.fillText("На рахунку: " + score, 10, 50);
 }
 
 function updateTimer() {
@@ -246,7 +251,6 @@ function checkTankRespawn() {
   if (tank.y > cv.height + 100) {
     tankArray.pop;
   }
-
   if (respawnTimer >= (30000 * (1 / (10 + score / 3))) + (Math.random() * 250)) {
     respawnTimer = 0;
     spawnTank();
@@ -257,7 +261,8 @@ function updateTankStatus(i) {
   tankArray[i].destroyed = true;
   tankArray[i].image.src = tankDestroyedImageUrl;
   score += 1;
-  document.getElementById("fuel").value += 100;
+  //document.getElementById("fuel").value += 100;
+  fuel += maxFuel/8;
 }
 
 function spawnTank() {
@@ -271,10 +276,15 @@ function restart() {
 }
 
 function updateFuel() {
-  let fuel = document.getElementById("fuel");
-  fuel.value -= 0.5 + 0.01 * (score+1);
+  if (fuel > maxFuel) fuel = maxFuel;
+  fuel -= maxFuel/2000 + maxFuel/10000 * score/10;
+  if (fuel <= 0) isGameOver = true;
+}
 
-  if(fuel.value <= 0) {
-    isGameOver = true;
-  }
+function drawfuel() {
+  var ctx = cv.getContext("2d");
+  ctx.fillStyle = "black";
+  ctx.fillRect(0,0,cv.width,20);
+  ctx.fillStyle = "yellow"
+  ctx.fillRect(5,5,fuel,10)
 }

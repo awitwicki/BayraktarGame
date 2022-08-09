@@ -74,9 +74,3 @@ canvas {
 .btn:hover {
     background-color: black;
 }
-
-.fuelBar {
-    position: absolute;
-    top: 20px;
-    visibility: hidden;
-}
