@@ -21,6 +21,7 @@ var respawnTimer = 0;
 var interval;
 var fuel;
 var maxFuel;
+var explosionFrames = [];
 
 var isGameOver = false;
 var isLineCrossed = false;
@@ -71,6 +72,7 @@ function component(width, height, color, x, y, type) {
   this.angle = 0;
   this.destroyed = false;
   this.launched = false;
+  this.frame = 0;
 
   this.update = function () {
     var ctx = gameArea.context;
@@ -96,7 +98,19 @@ function initLevel() {
   spawnTank();
 
   offset = (window.innerWidth - cv.width) / 2;
-  let barOffsetRight = offset + 10 + "px";
+
+  explosionFrames.push("res/frame0.gif");
+  explosionFrames.push("res/frame1.gif");
+  explosionFrames.push("res/frame2.gif");
+  explosionFrames.push("res/frame3.gif");
+  explosionFrames.push("res/frame4.gif");
+  explosionFrames.push("res/frame5.gif");
+  explosionFrames.push("res/frame6.gif");
+  explosionFrames.push("res/frame7.gif");
+  explosionFrames.push("res/frame8.gif");
+  explosionFrames.push("res/frame9.gif");
+  explosionFrames.push("res/frame10.gif");
+  explosionFrames.push("res/frame11.gif");
 
   // let fuel = document.getElementById("fuel");
   // fuel.style.visibility = "visible";
@@ -142,6 +156,7 @@ function updateGameArea() {
     // }
   }
 
+
   if (targets.length > 0) {
     for (i = 0; i < targets.length; i++) {
       target = targets[i];
@@ -149,6 +164,17 @@ function updateGameArea() {
       target.update();
       rocket.update();
       checkRocket();
+      if (target.destroyed && target.frame < explosionFrames.length - 1) {
+        target.y += 1;
+        target.frame += 1;
+        target.image.src = explosionFrames[target.frame];
+      }
+      if (target.frame == explosionFrames.length - 1) {
+        target.x = -100;
+        target.y = -100;
+        targets.pop;
+        rockets.pop;
+      }
     }
   }
 
@@ -192,7 +218,6 @@ function endGame() {
     }
   }
 
-  //tank.y = +50;
   
   clearInterval(interval);
   gameArea.clear();
@@ -237,13 +262,14 @@ function checkRocket() {
       }
     }
 
-    // Remove rocket and target
+    // Remove rocket
+
     rocket.x = -100;
     rocket.y = -100;
-    target.x = -100;
-    target.y = -100;
-    rockets.pop;
-    targets.pop;
+
+    target.image.src = explosionFrames[target.frame];
+    target.destroyed = true;
+
   }
 }
 
