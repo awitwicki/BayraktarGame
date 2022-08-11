@@ -30,6 +30,7 @@ const tankImageUrl = "res/Tank.png";
 const tankDestroyedImageUrl = "res/Tank_Destroyed.png";
 const targetImageUrl = "res/Target.png";
 const rocketImageUrl = "res/Rocket.png";
+const backgroundImageUrl = "res/Background.png";
 
 const frame0 = "res/frame0.png";
 const frame1 = "res/frame1.png";
@@ -134,11 +135,24 @@ function initLevel() {
   }
 
   drone = new component(200, 200, droneImageUrl, cv.width / 2, cv.height / 1.2, "drone");
+  background = new component (cv.width, cv.height, backgroundImageUrl, cv.width/2, cv.height/2, "background");
+  background2 = new component (cv.width, cv.height, backgroundImageUrl, cv.width/2, -cv.height/2, "background");
+  background.speedY = 1;
+  background2.speedY = 1;
 }
 
 // Update game tick
 function updateGameArea() {
   gameArea.clear();
+  if(background.y >= cv.height*1.5) {
+    background.y = cv.height/2;
+    background2.y = -cv.height/2;
+  }
+  background.update();
+  background.newPos();
+  background2.update();
+  background2.newPos();
+  
   updateTimer();
   updateFuel();
 
