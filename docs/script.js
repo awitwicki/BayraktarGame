@@ -21,7 +21,6 @@ var respawnTimer = 0;
 var interval;
 var fuel;
 var maxFuel;
-var explosionFrames = [];
 
 var isGameOver = false;
 var isLineCrossed = false;
@@ -31,6 +30,21 @@ const tankImageUrl = "res/Tank.png";
 const tankDestroyedImageUrl = "res/Tank_Destroyed.png";
 const targetImageUrl = "res/Target.png";
 const rocketImageUrl = "res/Rocket.png";
+
+const frame0 = "res/frame0.png";
+const frame1 = "res/frame1.png";
+const frame2 = "res/frame2.png";
+const frame3 = "res/frame3.png";
+const frame4 = "res/frame4.png";
+const frame5 = "res/frame5.png";
+const frame6 = "res/frame6.png";
+const frame7 = "res/frame7.png";
+const frame8 = "res/frame8.png";
+const frame9 = "res/frame9.png";
+const frame10 = "res/frame10.png";
+const frame11 = "res/frame11.png";
+
+const explosionFrames = [frame0, frame1, frame2, frame3, frame4, frame5, frame6, frame7, frame8, frame9, frame10, frame11];
 
 var gameArea = {
   start: function () {
@@ -99,22 +113,6 @@ function initLevel() {
 
   offset = (window.innerWidth - cv.width) / 2;
 
-  explosionFrames.push("res/frame0.gif");
-  explosionFrames.push("res/frame1.gif");
-  explosionFrames.push("res/frame2.gif");
-  explosionFrames.push("res/frame3.gif");
-  explosionFrames.push("res/frame4.gif");
-  explosionFrames.push("res/frame5.gif");
-  explosionFrames.push("res/frame6.gif");
-  explosionFrames.push("res/frame7.gif");
-  explosionFrames.push("res/frame8.gif");
-  explosionFrames.push("res/frame9.gif");
-  explosionFrames.push("res/frame10.gif");
-  explosionFrames.push("res/frame11.gif");
-
-  // let fuel = document.getElementById("fuel");
-  // fuel.style.visibility = "visible";
-  // fuel.style.right = barOffsetRight;
   fuel = cv.width - 10;
   maxFuel = cv.width - 10;
 
@@ -164,14 +162,15 @@ function updateGameArea() {
       target.update();
       rocket.update();
       checkRocket();
-      if (target.destroyed && target.frame < explosionFrames.length - 1) {
+      if (target.destroyed && target.frame <= 11 ) {
         target.y += 1;
         target.frame += 1;
         target.image.src = explosionFrames[target.frame];
       }
-      if (target.frame == explosionFrames.length - 1) {
+      if (target.frame == 11) {
         target.x = -100;
         target.y = -100;
+        target.frame = 0;
         targets.pop;
         rockets.pop;
       }
@@ -267,7 +266,7 @@ function checkRocket() {
     rocket.x = -100;
     rocket.y = -100;
 
-    target.image.src = explosionFrames[target.frame];
+    target.image.src = frame1;
     target.destroyed = true;
 
   }
