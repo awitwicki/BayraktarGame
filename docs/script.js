@@ -30,6 +30,22 @@ const tankImageUrl = "res/Tank.png";
 const tankDestroyedImageUrl = "res/Tank_Destroyed.png";
 const targetImageUrl = "res/Target.png";
 const rocketImageUrl = "res/Rocket.png";
+const backgroundImageUrl = "res/Background.png";
+
+const frame0 = "res/frame0.png";
+const frame1 = "res/frame1.png";
+const frame2 = "res/frame2.png";
+const frame3 = "res/frame3.png";
+const frame4 = "res/frame4.png";
+const frame5 = "res/frame5.png";
+const frame6 = "res/frame6.png";
+const frame7 = "res/frame7.png";
+const frame8 = "res/frame8.png";
+const frame9 = "res/frame9.png";
+const frame10 = "res/frame10.png";
+const frame11 = "res/frame11.png";
+
+const explosionFrames = [frame0, frame1, frame2, frame3, frame4, frame5, frame6, frame7, frame8, frame9, frame10, frame11];
 
 var gameArea = {
   start: function () {
@@ -71,6 +87,7 @@ function component(width, height, color, x, y, type) {
   this.angle = 0;
   this.destroyed = false;
   this.launched = false;
+  this.frame = 0;
 
   this.update = function () {
     var ctx = gameArea.context;
@@ -96,11 +113,7 @@ function initLevel() {
   spawnTank();
 
   offset = (window.innerWidth - cv.width) / 2;
-  let barOffsetRight = offset + 10 + "px";
 
-  // let fuel = document.getElementById("fuel");
-  // fuel.style.visibility = "visible";
-  // fuel.style.right = barOffsetRight;
   fuel = cv.width - 10;
   maxFuel = cv.width - 10;
 
@@ -122,11 +135,24 @@ function initLevel() {
   }
 
   drone = new component(200, 200, droneImageUrl, cv.width / 2, cv.height / 1.2, "drone");
+  background = new component (cv.width, cv.height, backgroundImageUrl, cv.width/2, cv.height/2, "background");
+  background2 = new component (cv.width, cv.height, backgroundImageUrl, cv.width/2, -cv.height/2, "background");
+  background.speedY = 1;
+  background2.speedY = 1;
 }
 
 // Update game tick
 function updateGameArea() {
   gameArea.clear();
+  if(background.y >= cv.height*1.5) {
+    background.y = cv.height/2;
+    background2.y = -cv.height/2;
+  }
+  background.update();
+  background.newPos();
+  background2.update();
+  background2.newPos();
+  
   updateTimer();
   updateFuel();
 
@@ -142,6 +168,7 @@ function updateGameArea() {
     // }
   }
 
+
   if (targets.length > 0) {
     for (i = 0; i < targets.length; i++) {
       target = targets[i];
@@ -149,6 +176,18 @@ function updateGameArea() {
       target.update();
       rocket.update();
       checkRocket();
+      if (target.destroyed && target.frame <= 11 ) {
+        target.y += 1;
+        target.frame += 1;
+        target.image.src = explosionFrames[target.frame];
+      }
+      if (target.frame == 11) {
+        target.x = -100;
+        target.y = -100;
+        target.frame = 0;
+        targets.pop;
+        rockets.pop;
+      }
     }
   }
 
@@ -192,7 +231,6 @@ function endGame() {
     }
   }
 
-  //tank.y = +50;
   
   clearInterval(interval);
   gameArea.clear();
@@ -237,13 +275,14 @@ function checkRocket() {
       }
     }
 
-    // Remove rocket and target
+    // Remove rocket
+
     rocket.x = -100;
     rocket.y = -100;
-    target.x = -100;
-    target.y = -100;
-    rockets.pop;
-    targets.pop;
+
+    target.image.src = frame1;
+    target.destroyed = true;
+
   }
 }
 
