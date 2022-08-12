@@ -17,6 +17,7 @@ var score = 0;
 var tankArray = [];
 var rockets = [];
 var targets = [];
+var explosions = [];
 var respawnTimer = 0;
 var interval;
 var fuel;
@@ -31,32 +32,16 @@ const tankDestroyedImageUrl = "res/Tank_Destroyed.png";
 const targetImageUrl = "res/Target.png";
 const rocketImageUrl = "res/Rocket.png";
 const backgroundImageUrl = "res/Background.png";
+const explosionImageUrl = "res/Explosion.gif";
 
-const frame0 = "res/frame0.png";
-const frame1 = "res/frame1.png";
-const frame2 = "res/frame2.png";
-const frame3 = "res/frame3.png";
-const frame4 = "res/frame4.png";
-const frame5 = "res/frame5.png";
-const frame6 = "res/frame6.png";
-const frame7 = "res/frame7.png";
-const frame8 = "res/frame8.png";
-const frame9 = "res/frame9.png";
-const frame10 = "res/frame10.png";
-const frame11 = "res/frame11.png";
-
-const explosionFrames = [frame0, frame1, frame2, frame3, frame4, frame5, frame6, frame7, frame8, frame9, frame10, frame11];
+var _explosionSprite = GIF();
+_explosionSprite.load(explosionImageUrl)
 
 var gameArea = {
   start: function () {
     var cv = document.getElementById('cv');
     cv.style.visibility = "visible";
-
-    if (window.innerWidth < 700) {
-      cv.width = window.innerWidth;
-    } else {
-      cv.width = 700;
-    }
+    cv.width = Math.min(window.innerWidth, 700);
 
     this.context = cv.getContext("2d");
 
@@ -71,11 +56,25 @@ var gameArea = {
   }
 }
 
-function component(width, height, color, x, y, type) {
+// Suppoted types
+// Tank, destroyed tank, rocket, explosion, explosion crater
+function gameEntity(width, height, imageSrc, x, y, type) {
   this.type = type;
 
-  this.image = new Image();
-  this.image.src = color;
+  // Sprite type
+  if (imageSrc.includes(".gif")) {
+    // Animated sprite
+    this.isAnimated = true;
+
+    this.gif = GIF();
+    this.gif.load(imageSrc);
+  } else if (imageSrc.includes(".png")) {
+    // Simple image sprite
+    this.isAnimated = false;
+
+    this.image = new Image();
+    this.image.src = imageSrc;
+  }
 
   this.gamearea = gameArea;
   this.width = width;
@@ -88,14 +87,32 @@ function component(width, height, color, x, y, type) {
   this.destroyed = false;
   this.launched = false;
   this.frame = 0;
+  this.index = 0;
 
-  this.update = function () {
+  this.draw = function () {
     var ctx = gameArea.context;
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(this.angle);
-    ctx.drawImage(this.image, this.width / -2, this.height / -2, this.width, this.height);
+
+    // Get image to draw
+    var img;
+
+    if (this.isAnimated) {
+      img = this.gif.frames[this.index].image;
+    } else {
+      img = this.image;
+    }
+
+    ctx.drawImage(img, this.width / -2, this.height / -2, this.width, this.height);
     ctx.restore();
+
+
+    // New frame in animation
+    if (this.isAnimated) {
+      this.index++;
+      this.index = Math.min(this.index, this.gif.frameCount - 1);
+    }
   }
 
   this.newPos = function () {
@@ -118,25 +135,28 @@ function initLevel() {
   maxFuel = cv.width - 10;
 
   cv.addEventListener('click', (evt) => { });
+
   cv.onclick = (evt) => {
     if (!cooldown) {
-      var _rocket = new component(25, 25, rocketImageUrl, -100, -100, "rocket");
-      var _target = new component(100, 100, targetImageUrl, evt.clientX - offset, evt.clientY, "target");
+      var _target = new gameEntity(100, 100, targetImageUrl, evt.clientX - offset, evt.clientY, "target");
+      var _rocket = new gameEntity(25, 25, rocketImageUrl, -100, -100, "rocket");
+      _rocket.launched = true;
       _rocket.x = drone.x;
       _rocket.y = drone.y;
       _rocket.speedX = (_target.x - drone.x) / -((_target.y - cv.height - 100) / 6);
       _rocket.speedY = (_target.y - drone.y) / -((_target.y - cv.height - 100) / 6);
-      cooldown = true;
-      _rocket.launched = true;
       _rocket.angle = Math.atan2(_target.y - _rocket.y, _target.x - _rocket.x);
+
+      cooldown = true;
+
       rockets.push(_rocket);
       targets.push(_target);
     }
   }
 
-  drone = new component(200, 200, droneImageUrl, cv.width / 2, cv.height / 1.2, "drone");
-  background = new component (cv.width, cv.height, backgroundImageUrl, cv.width/2, cv.height/2, "background");
-  background2 = new component (cv.width, cv.height, backgroundImageUrl, cv.width/2, -cv.height/2, "background");
+  drone = new gameEntity(200, 200, droneImageUrl, cv.width / 2, cv.height / 1.2, "drone");
+  background = new gameEntity(cv.width, cv.height, backgroundImageUrl, cv.width / 2, cv.height / 2, "background");
+  background2 = new gameEntity(cv.width, cv.height, backgroundImageUrl, cv.width / 2, -cv.height / 2, "background");
   background.speedY = 1;
   background2.speedY = 1;
 }
@@ -144,56 +164,59 @@ function initLevel() {
 // Update game tick
 function updateGameArea() {
   gameArea.clear();
-  if(background.y >= cv.height*1.5) {
-    background.y = cv.height/2;
-    background2.y = -cv.height/2;
+
+  if (background.y >= cv.height * 1.5) {
+    background.y = cv.height / 2;
+    background2.y = -cv.height / 2;
   }
-  background.update();
+
+  background.draw();
   background.newPos();
-  background2.update();
+  background2.draw();
   background2.newPos();
-  
+
   updateTimer();
   updateFuel();
 
   for (var i = 0; i < tankArray.length; i++) {
-    tank = tankArray[i];
-    tank.update();
-    tank.newPos();
-    checkTankRespawn();
-
-    // Check for tank crossed alive
-    // if (tank.y >= cv.height && tank.destroyed == false) {
-    //   isGameOver = true;
-    // }
+    tankArray[i].draw();
+    tankArray[i].newPos();
+    checkTankRespawn(tankArray[i]);
   }
 
-
+  // Targets and rockets
   if (targets.length > 0) {
     for (i = 0; i < targets.length; i++) {
       target = targets[i];
       rocket = rockets[i];
-      target.update();
-      rocket.update();
-      checkRocket();
-      if (target.destroyed && target.frame <= 11 ) {
-        target.y += 1;
-        target.frame += 1;
-        target.image.src = explosionFrames[target.frame];
-      }
-      if (target.frame == 11) {
+      target.draw();
+      rocket.draw();
+      checkRocket(rocket);
+
+      if (target.destroyed) {
         target.x = -100;
         target.y = -100;
-        target.frame = 0;
-        targets.pop;
-        rockets.pop;
+
+        targets.pop();
+        rockets.pop();
       }
     }
   }
 
+  // Explosions
+  for (var i = 0; i < explosions.length; i++) {
+    explosions[i].draw();
+    explosions[i].newPos();
+
+    // Last frame means remove sprite
+    if (explosions[i].index == explosions[i].gif.frameCount - 1) {
+      explosions.pop();
+    }
+  }
+
   drawScore();
-  drawfuel();
-  drone.update();
+  drawFuel();
+  drone.draw();
   if (isGameOver) {
     endGame();
   }
@@ -211,35 +234,34 @@ function endGame() {
     // Connect the client
     client.connect({
       useSSL: true,
-      onSuccess:onConnect
+      onSuccess: onConnect
     });
 
     // Called when the client connects
     function onConnect() {
-        // Once a connection has been made, make a subscription and send a message.
-        console.log("onConnect");
-        var message = new Paho.MQTT.Message(gameId + '|' + score);
-        message.destinationName = "h3twergwergomemperature";
-        client.send(message);
-        console.log("Sent");
+      // Once a connection has been made, make a subscription and send a message.
+      console.log("onConnect");
+      var message = new Paho.MQTT.Message(gameId + '|' + score);
+      message.destinationName = "h3twergwergomemperature";
+      client.send(message);
+      console.log("Sent");
     }
 
     function uuidv4() {
-        return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
-            (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
-        );
+      return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
+        (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+      );
     }
   }
 
-  
   clearInterval(interval);
   gameArea.clear();
   document.getElementById("restart").style.visibility = "visible";
   var ctx = cv.getContext("2d");
   ctx.font = "30px Arial";
   ctx.textAlign = "center";
-  ctx.fillText("Ви програли!", cv.width/2, cv.height/2 - 140)
-  ctx.fillText("На рахунку: " + score, cv.width/2, cv.height/2-100)
+  ctx.fillText("Ви програли!", cv.width / 2, cv.height / 2 - 140)
+  ctx.fillText("На рахунку: " + score, cv.width / 2, cv.height / 2 - 100)
 }
 
 function drawScore() {
@@ -258,7 +280,7 @@ function updateTimer() {
   }
 }
 
-function checkRocket() {
+function checkRocket(rocket) {
   if (rocket.launched) {
     rocket.newPos();
   }
@@ -267,45 +289,49 @@ function checkRocket() {
     rocket.launched = false;
     for (var i = 0; i < tankArray.length; i++) {
       if (
-          (50 > target.x - tankArray[i].x && target.x - tankArray[i].x > -50) &&
-          (50 > target.y - tankArray[i].y && target.y - tankArray[i].y > -50) &&
-          !tankArray[i].destroyed
-         ) {
-        updateTankStatus(i);
+        (50 > target.x - tankArray[i].x && target.x - tankArray[i].x > -50) &&
+        (50 > target.y - tankArray[i].y && target.y - tankArray[i].y > -50) &&
+        !tankArray[i].destroyed
+      ) {
+        destroyTank(tankArray[i]);
       }
     }
 
-    // Remove rocket
+    // Spawn Explosion
+    var _explosion = new gameEntity(100, 100, '', rocket.x, rocket.y, "explosion");
+    _explosion.gif = _explosionSprite;
+    _explosion.isAnimated = true;
+    _explosion.speedY = 1;
+    explosions.push(_explosion);
 
+    // Remove rocket
     rocket.x = -100;
     rocket.y = -100;
 
-    target.image.src = frame1;
     target.destroyed = true;
-
   }
 }
 
-function checkTankRespawn() {
+function checkTankRespawn(tank) {
   if (tank.y > cv.height + 100) {
     tankArray.pop;
   }
+
   if (respawnTimer >= (30000 * (1 / (10 + score / 3))) + (Math.random() * 250)) {
     respawnTimer = 0;
     spawnTank();
   }
 }
 
-function updateTankStatus(i) {
-  tankArray[i].destroyed = true;
-  tankArray[i].image.src = tankDestroyedImageUrl;
+function destroyTank(tank) {
+  tank.destroyed = true;
+  tank.image.src = tankDestroyedImageUrl;
   score += 1;
-  //document.getElementById("fuel").value += 100;
-  fuel += maxFuel/8;
+  fuel += maxFuel / 8;
 }
 
 function spawnTank() {
-  var _tank = new component(100, 100, tankImageUrl, Math.random() * (cv.width - 50), -100, "tank");
+  var _tank = new gameEntity(100, 100, tankImageUrl, Math.random() * (cv.width - 50), -100, "tank");
   _tank.speedY = 1;
   tankArray.push(_tank);
 }
@@ -315,15 +341,19 @@ function restart() {
 }
 
 function updateFuel() {
-  if (fuel > maxFuel) fuel = maxFuel;
-  fuel -= maxFuel/2000 + maxFuel/10000 * score/10;
-  if (fuel <= 0) isGameOver = true;
+  fuel = Math.min(fuel, maxFuel);
+
+  fuel -= maxFuel / 2000 + maxFuel / 10000 * score / 100;
+
+  if (fuel <= 0) {
+    isGameOver = true;
+  }
 }
 
-function drawfuel() {
+function drawFuel() {
   var ctx = cv.getContext("2d");
   ctx.fillStyle = "black";
-  ctx.fillRect(0,0,cv.width,20);
-  ctx.fillStyle = "yellow"
-  ctx.fillRect(5,5,fuel,10)
+  ctx.fillRect(0, 0, cv.width, 20);
+  ctx.fillStyle = "yellow";
+  ctx.fillRect(5, 5, fuel, 10);
 }
