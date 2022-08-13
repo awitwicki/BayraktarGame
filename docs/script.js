@@ -130,7 +130,7 @@ function initLevel() {
   cv.onclick = (evt) => {
     if (!cooldown) {
       var _target = new gameEntity(100, 100, targetImageUrl, evt.clientX - offset, evt.clientY, "target");
-      var _rocket = new gameEntity(25, 25, rocketImageUrl, -100, -100, "rocket");
+      var _rocket = new gameEntity(40, 40, rocketImageUrl, -100, -100, "rocket");
       _rocket.target = _target;
       _rocket.launched = true;
       _rocket.x = drone.x;
@@ -260,9 +260,9 @@ function endGame() {
 
 function drawScore() {
   var ctx = cv.getContext("2d");
-  ctx.fillStyle = "black";
+  ctx.fillStyle = "rgb(0, 255, 123)";
   ctx.font = "30px Arial";
-  ctx.fillText("На рахунку: " + score, 10, 50);
+  ctx.fillText("На рахунку: " + score, 5, 40);
 }
 
 function updateTimer() {
@@ -349,8 +349,8 @@ function updateFuel() {
 
 function drawFuel() {
   var ctx = cv.getContext("2d");
-  ctx.fillStyle = "black";
-  ctx.fillRect(0, 0, cv.width, 20);
+  ctx.fillStyle = "white";
+  ctx.fillRect(0, 0, cv.width, 10);
   ctx.fillStyle = "yellow";
-  ctx.fillRect(5, 5, fuel, 10);
+  ctx.fillRect(0, 0, fuel, 10);
 }
