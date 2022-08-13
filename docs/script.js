@@ -8,15 +8,12 @@ function startGame() {
 
 var tank;
 var drone;
-var rocket;
-var target;
 var cooldown = false;
 var cooldownTimer = 0;
 var offset;
 var score = 0;
 var tankArray = [];
 var rockets = [];
-var targets = [];
 var explosions = [];
 var respawnTimer = 0;
 var interval;
@@ -34,7 +31,7 @@ const rocketImageUrl = "res/Rocket.png";
 const backgroundImageUrl = "res/Background.png";
 const explosionImageUrl = "res/Explosion.gif";
 
-var _explosionSprite = GIF();
+const _explosionSprite = GIF();
 _explosionSprite.load(explosionImageUrl)
 
 var gameArea = {
@@ -42,14 +39,9 @@ var gameArea = {
     var cv = document.getElementById('cv');
     cv.style.visibility = "visible";
     cv.width = Math.min(window.innerWidth, 700);
+    cv.height = Math.min(window.innerHeight, 950);
 
     this.context = cv.getContext("2d");
-
-    if (window.innerHeight < 950) {
-      cv.height = window.innerHeight;
-    } else {
-      cv.height = 950;
-    }
   },
   clear: function () {
     this.context.clearRect(0, 0, cv.width, cv.height);
@@ -107,7 +99,6 @@ function gameEntity(width, height, imageSrc, x, y, type) {
     ctx.drawImage(img, this.width / -2, this.height / -2, this.width, this.height);
     ctx.restore();
 
-
     // New frame in animation
     if (this.isAnimated) {
       this.index++;
@@ -140,6 +131,7 @@ function initLevel() {
     if (!cooldown) {
       var _target = new gameEntity(100, 100, targetImageUrl, evt.clientX - offset, evt.clientY, "target");
       var _rocket = new gameEntity(25, 25, rocketImageUrl, -100, -100, "rocket");
+      _rocket.target = _target;
       _rocket.launched = true;
       _rocket.x = drone.x;
       _rocket.y = drone.y;
@@ -150,7 +142,6 @@ function initLevel() {
       cooldown = true;
 
       rockets.push(_rocket);
-      targets.push(_target);
     }
   }
 
@@ -178,40 +169,43 @@ function updateGameArea() {
   updateTimer();
   updateFuel();
 
+  // Tanks
   for (var i = 0; i < tankArray.length; i++) {
     tankArray[i].draw();
     tankArray[i].newPos();
-    checkTankRespawn(tankArray[i]);
   }
 
-  // Targets and rockets
-  if (targets.length > 0) {
-    for (i = 0; i < targets.length; i++) {
-      target = targets[i];
-      rocket = rockets[i];
-      target.draw();
-      rocket.draw();
-      checkRocket(rocket);
+  checkTankRespawn();
 
-      if (target.destroyed) {
-        target.x = -100;
-        target.y = -100;
+  // Rockets and them targets
+  if (rockets.length > 0) {
+    for (i = 0; i < rockets.length; i++) {
+      var _rocket = rockets[i];
+      var _target = _rocket.target;
 
-        targets.pop();
-        rockets.pop();
-      }
+      _target.draw();
+      _rocket.draw();
+
+      checkRocket(_rocket);
     }
+
+    // Remove destroyed
+    rockets = rockets.filter(object => {
+      return !object.destroyed;
+    });
   }
 
   // Explosions
-  for (var i = 0; i < explosions.length; i++) {
-    explosions[i].draw();
-    explosions[i].newPos();
-
-    // Last frame means remove sprite
-    if (explosions[i].index == explosions[i].gif.frameCount - 1) {
-      explosions.pop();
+  if (explosions.length > 0) {
+    for (var i = 0; i < explosions.length; i++) {
+      explosions[i].draw();
+      explosions[i].newPos();
     }
+
+    // Remove destroyed (last frame means remove sprite)
+    explosions = explosions.filter(object => {
+      return object.index != object.gif.frameCount - 1;
+    });
   }
 
   drawScore();
@@ -281,6 +275,8 @@ function updateTimer() {
 }
 
 function checkRocket(rocket) {
+  var target = rocket.target;
+  
   if (rocket.launched) {
     rocket.newPos();
   }
@@ -308,14 +304,15 @@ function checkRocket(rocket) {
     rocket.x = -100;
     rocket.y = -100;
 
-    target.destroyed = true;
+    rocket.destroyed = true;
   }
 }
 
 function checkTankRespawn(tank) {
-  if (tank.y > cv.height + 100) {
-    tankArray.pop;
-  }
+  // Remove tanks
+  tankArray = tankArray.filter(object => {
+    return object.y < cv.height + 100;
+  });
 
   if (respawnTimer >= (30000 * (1 / (10 + score / 3))) + (Math.random() * 250)) {
     respawnTimer = 0;
