@@ -120,8 +120,6 @@ function startLevel() {
 function initLevel() {
   spawnTank();
 
-  offset = (window.innerWidth - cv.width) / 2;
-
   fuel = cv.width - 10;
   maxFuel = cv.width - 10;
 
@@ -129,7 +127,10 @@ function initLevel() {
 
   cv.onclick = (evt) => {
     if (!cooldown) {
-      var _target = new gameEntity(100, 100, targetImageUrl, evt.clientX - offset, evt.clientY, "target");
+      var offset_width = (window.innerWidth - cv.width) / 2;
+      var offset_height = (window.innerHeight - cv.height) / 2;
+
+      var _target = new gameEntity(100, 100, targetImageUrl, evt.clientX - offset_width, evt.clientY - offset_height, "target");
       var _rocket = new gameEntity(40, 40, rocketImageUrl, -100, -100, "rocket");
       _rocket.target = _target;
       _rocket.launched = true;
