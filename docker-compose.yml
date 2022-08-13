@@ -9,3 +9,5 @@ services:
     container_name: bayraktar-gamebot-container
     env_file:
       - .env
+    network_mode: host
+
