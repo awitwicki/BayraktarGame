@@ -37,25 +37,42 @@ using Telegram.Bot.Types.ReplyMarkups;
     // received messages get lost.
     mqttClient.ApplicationMessageReceivedAsync += e =>
     {
-        Console.WriteLine("Received application message.");
-        var byteArray = e.ApplicationMessage.Payload;
-        string dataStr = System.Text.Encoding.UTF8.GetString(byteArray);
-
-        // DataStr is structured string
-        // GameId|Score|
-        // BAaAYE|   36|
-
-        Console.WriteLine(dataStr);
-
-        string gameId = dataStr.Split("|").First();
-
-        int score = int.Parse(dataStr.Split("|").Skip(1).First());
-
-        // Check the score
-        if (Games.GamesDict.TryRemove(gameId, out GameEntity gameEntity))
+        try
         {
-            InfluxDBLiteClient.Query($"bots,botname=baraktar_bot,user_id={gameEntity.UserId} user_sent_score={score}");
-            BotClientBuilder.BotClient.SetGameScoreAsync(gameEntity.UserId, score, gameEntity.InlineMessageId, true).Wait();
+            Console.WriteLine("Received application message.");
+            var byteArray = e.ApplicationMessage.Payload;
+            string dataStr = System.Text.Encoding.UTF8.GetString(byteArray);
+
+            // DataStr is structured string
+            // GameId|Score|
+            // BAaAYE|   36|
+
+            Console.WriteLine(dataStr);
+
+            string gameId = dataStr.Split("|").First();
+
+            int score = int.Parse(dataStr.Split("|").Skip(1).First());
+
+            // Delete all expired
+            foreach (var expiredGame in Games.GamesDict.Where(x => (DateTime.UtcNow - x.Value.StartedUtc).TotalMinutes > 20))
+            {
+                Games.GamesDict.TryRemove(expiredGame.Key, out GameEntity _gameEntity);
+            }
+
+            // Check the score
+            if (Games.GamesDict.TryGetValue(gameId, out GameEntity gameEntity))
+            {
+                // Check score hack by gameplay time
+                // double playedSeconds = (DateTime.UtcNow - gameEntity.StartedUtc).TotalSeconds;
+                // ...
+
+                InfluxDBLiteClient.Query($"bots,botname=baraktar_bot,user_id={gameEntity.UserId} user_sent_score={score}");
+                BotClientBuilder.BotClient.SetGameScoreAsync(gameEntity.UserId, score, gameEntity.InlineMessageId, true).Wait();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
         }
 
         return Task.CompletedTask;
@@ -94,6 +111,9 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
 {
     try
     {
+        // TODO:
+        // Add inline query handler to return game
+
         if (update.Type == UpdateType.CallbackQuery && update.CallbackQuery!.IsGameQuery)
         {
             var id = update.CallbackQuery!.Id;
