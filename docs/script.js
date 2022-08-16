@@ -15,6 +15,7 @@ var score = 0;
 var tankArray = [];
 var rockets = [];
 var explosions = [];
+var craters = [];
 var respawnTimer = 0;
 var interval;
 var fuel;
@@ -30,6 +31,7 @@ const targetImageUrl = "res/Target.png";
 const rocketImageUrl = "res/Rocket.png";
 const backgroundImageUrl = "res/Background.png";
 const explosionImageUrl = "res/Explosion.gif";
+const craterImageUrl = "res/Crater.png";
 
 const _explosionSprite = GIF();
 _explosionSprite.load(explosionImageUrl)
@@ -169,6 +171,17 @@ function updateGameArea() {
 
   updateTimer();
   updateFuel();
+  if (craters.length > 0) {
+    for (i = 0; i < craters.length; i++) {
+      craters[i].draw();
+      craters[i].newPos();
+      
+      craters = craters.filter(object => {
+        return object.y < cv.height + 100;
+      });
+
+    }
+  }
 
   // Tanks
   for (var i = 0; i < tankArray.length; i++) {
@@ -301,10 +314,14 @@ function checkRocket(rocket) {
 
     // Spawn Explosion
     var _explosion = new gameEntity(100, 100, '', rocket.x, rocket.y, "explosion");
+    var _crater = new gameEntity( 100, 100, craterImageUrl, rocket.x, rocket.y, "crater");
     _explosion.gif = _explosionSprite;
     _explosion.isAnimated = true;
     _explosion.speedY = 1;
+    _crater.speedY = 1;
+    _crater.angle = Math.random()*Math.PI*2;
     explosions.push(_explosion);
+    craters.push(_crater);
 
     // Remove rocket
     rocket.x = -100;
