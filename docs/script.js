@@ -282,6 +282,11 @@ function checkRocket(rocket) {
     rocket.newPos();
   }
 
+  var ctxx = cv.getContext("2d");
+  ctxx.fillStyle = "rgb(0, 255, 123)";
+  ctxx.fillText(Math.abs(Math.round(rocket.x-target.x))+","+Math.abs(Math.round(rocket.y-target.y)) , target.x - 50 , target.y - 50);
+  //ctxx.fillText(Math.abs(Math.round(rocket.y-target.y)) , target.x  , target.y - 50);
+
   if (rocket.x <= target.x + 5 && rocket.y <= target.y + 5 && rocket.x >= target.x - 5 && rocket.y >= target.y - 5) {
     rocket.launched = false;
     for (var i = 0; i < tankArray.length; i++) {
