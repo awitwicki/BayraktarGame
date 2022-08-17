@@ -362,8 +362,11 @@ function restart() {
 
 function updateFuel() {
   fuel = Math.min(fuel, maxFuel);
-
-  fuel -= maxFuel / 2000 + maxFuel / 10000 * score / 20;
+  var diff = 1 - 1/(score+1.1);
+  fuel -= (maxFuel/8/100) * (1-1/(score+21)*20);
+  // * (<1)      ((>1))
+  // = (maxFuel/8) * 1 / (maxFuel / 2000 - maxFuel / 10000 * score / 20)
+  // < maxFuel/8
 
   if (fuel <= 0) {
     isGameOver = true;
