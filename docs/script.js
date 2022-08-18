@@ -138,8 +138,8 @@ function initLevel() {
       _rocket.launched = true;
       _rocket.x = drone.x;
       _rocket.y = drone.y;
-      _rocket.speedX = (_target.x - drone.x) / -((_target.y - cv.height - 100) / 6);
-      _rocket.speedY = (_target.y - drone.y) / -((_target.y - cv.height - 100) / 6);
+      _rocket.speedX = 5*(_target.x - drone.x) / (Math.abs(_target.x - drone.x)+Math.abs(_target.y - drone.y));
+      _rocket.speedY = 5*(_target.y - drone.y) / (Math.abs(_target.x - drone.x)+Math.abs(_target.y - drone.y));
       _rocket.angle = Math.atan2(_target.y - _rocket.y, _target.x - _rocket.x);
 
       cooldown = true;
@@ -362,8 +362,11 @@ function restart() {
 
 function updateFuel() {
   fuel = Math.min(fuel, maxFuel);
-
-  fuel -= maxFuel / 2000 + maxFuel / 10000 * score / 100;
+  var diff = 1 - 1/(score+1.1);
+  fuel -= (maxFuel/8/100) * (1-1/(score+21)*20);
+  // * (<1)      ((>1))
+  // = (maxFuel/8) * 1 / (maxFuel / 2000 - maxFuel / 10000 * score / 20)
+  // < maxFuel/8
 
   if (fuel <= 0) {
     isGameOver = true;
